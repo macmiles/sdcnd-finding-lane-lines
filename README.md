@@ -1,6 +1,5 @@
 
 # Project 1 - Identifying lane lines on the road
----
 The goal of this project was to develop a pipeline that precisely and efficiently identifies lane lines on the road.
 
 
@@ -62,10 +61,10 @@ show_images(test_images)
 
 ## Lane Marking Color Selection
 Functions used in this section are:
-* `np.uint8()` -- array of unsigned integer (0 to 255) type
-* `cv2.inRange()` -- omits everything outside the lower and upper thresholds for a given array
-* `cv2.bitwise_or()` -- computes the per-element bit-wise disjunction of two arrays or an array and a scalar.
-* `cv2.bitwise_and()` -- computes the per-element bit-wise conjunction of two arrays or an array and a scalar.
+* `np.uint8()` – array of unsigned integer (0 to 255) type
+* `cv2.inRange()` – omits everything outside the lower and upper thresholds for a given array
+* `cv2.bitwise_or()` – computes the per-element bit-wise disjunction of two arrays or an array and a scalar.
+* `cv2.bitwise_and()` – computes the per-element bit-wise conjunction of two arrays or an array and a scalar.
 
 ### RGB Color Space
 The images are currently set to the RGB color space, which may have its downfalls. Let's try selecting the white and yellow lane markngs on the road to test it out.
