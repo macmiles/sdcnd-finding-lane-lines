@@ -520,5 +520,6 @@ We've successfully developed a pipeline that is consistently able to identify la
 All in all, this was a challening but fun project with a lot of lessons learned. The task of identifying lane markings isn't always an easy one, but through the use of some creative computing and basic algebra, we were able to do just that.
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/mVGHTRD9wAY" frameborder="0" allowfullscreen></iframe>
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/mVGHTRD9wAY/0.jpg)](https://www.youtube.com/watch?v=mVGHTRD9wAY)
 
 
