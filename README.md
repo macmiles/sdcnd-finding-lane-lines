@@ -510,15 +510,6 @@ process_video('challenge.mp4', 'challenge-output-mask-gray-blur-canny-roi-hough-
 
 As we can see, the lane smoothing algorithm (right side of video) provides substantial improvements to our lane markings.
 
-
-```python
-from IPython.display import HTML
-HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/sSY5vPHzfzQ" frameborder="0" allowfullscreen></iframe>')
-```
-
-
-
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/sSY5vPHzfzQ" frameborder="0" allowfullscreen></iframe>
 
 
@@ -527,15 +518,6 @@ HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/sSY5vP
 We've successfully developed a pipeline that is consistently able to identify lane markings on various road and environment conditions but there's still some room for improvement. It might be pertinent to apply a different line fitting technique when traversing curved roads, since fitting a linear line on a curve isn't exactly ideal. Moreover, we could explore the idea of identifying lane markings in adjacent lanes to get a better world view of the entire road/freeway. At the moment, our pipeline has only been tested on a handful of test samples. If we want to create a more robust pipeline, we should consider testing it on other roads and different weather conditions as well. 
 
 All in all, this was a challening but fun project with a lot of lessons learned. The task of identifying lane markings isn't always an easy one, but through the use of some creative computing and basic algebra, we were able to do just that.
-
-
-```python
-from IPython.display import HTML
-HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/mVGHTRD9wAY" frameborder="0" allowfullscreen></iframe>')
-```
-
-
-
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/mVGHTRD9wAY" frameborder="0" allowfullscreen></iframe>
 
