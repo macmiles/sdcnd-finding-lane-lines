@@ -522,4 +522,4 @@ All in all, this was a challening but fun project with a lot of lessons learned.
 <iframe width="560" height="315" src="https://www.youtube.com/embed/mVGHTRD9wAY" frameborder="0" allowfullscreen></iframe>
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/mVGHTRD9wAY/0.jpg)](https://www.youtube.com/watch?v=mVGHTRD9wAY)
 
-
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=mVGHTRD9wAY" target="_blank"><img src="http://img.youtube.com/vi/mVGHTRD9wAY/0.jpg" alt="IMAGE ALT TEXT HERE" width="240" height="180" border="10" /></a>
