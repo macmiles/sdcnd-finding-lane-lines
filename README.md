@@ -311,21 +311,23 @@ def avg_slope_intercept(lines):
     right_lines = [] # [(slope, intercept),...]
     right_weights = [] # [length,...]
     
-    for line in lines:
-        for x1,y1,x2,y2 in line:
-            length = np.sqrt((x2-x1)**2+(y2-y1)**2)
-            slope = (y2-y1)/(x2-x1)
-            intercept = y1 - slope * x1
-            
-            if slope < 0:
-                left_lines.append((slope,intercept))
-                left_weights.append(length)
-            else:
-                right_lines.append((slope,intercept))
-                right_weights.append(length)
-    
-    left_lane_line = np.dot(left_weights,left_lines)/np.sum(left_weights) if len(left_weights) > 0 else None
-    right_lane_line = np.dot(right_weights,right_lines)/np.sum(right_weights) if len(right_weights) > 0 else None
+    if lines is not None:
+        for line in lines:
+            if line is not None:
+                for x1,y1,x2,y2 in line:
+                    length = np.sqrt((x2-x1)**2+(y2-y1)**2)
+                    slope = (y2-y1)/(x2-x1)
+                    intercept = y1 - slope * x1
+
+                    if slope < 0:
+                        left_lines.append((slope,intercept))
+                        left_weights.append(length)
+                    else:
+                        right_lines.append((slope,intercept))
+                        right_weights.append(length)
+
+        left_lane_line = np.dot(left_weights,left_lines)/np.sum(left_weights) if len(left_weights) > 0 else None
+        right_lane_line = np.dot(right_weights,right_lines)/np.sum(right_weights) if len(right_weights) > 0 else None
     
     return left_lane_line, right_lane_line
 
@@ -343,14 +345,17 @@ def draw_two_lanes(image,lane_lines,color=[255,0,0],thickness=12):
     y2=y1*0.6
     
     lane_image = np.zeros_like(image)
+#     print(lane_lines.shape)
     for line in lane_lines:
-        slope = line[0]
-        intercept = line[1]
-        x1 = int((y1 - intercept)/slope)
-        x2 = int((y2 - intercept)/slope)
-        y1 = int(y1)
-        y2 = int(y2)
-        cv2.line(lane_image,(x1,y1),(x2,y2),color,thickness)
+        if line is not None:
+            slope = line[0]
+            intercept = line[1]
+
+            x1 = int((y1 - intercept)/slope)
+            x2 = int((y2 - intercept)/slope)
+            y1 = int(y1)
+            y2 = int(y2)
+            cv2.line(lane_image,(x1,y1),(x2,y2),color,thickness)
         
     return cv2.addWeighted(image,1,lane_image,0.9,0)
 
@@ -407,11 +412,12 @@ class FindLanes:
             right_slope = 0
             right_intercept = 0
             for i,[left_lane, right_lane] in enumerate(self.slope_int_memory):
-                weight_sum += weights[i]
-                left_slope += left_lane[0]*weights[i]
-                left_intercept += left_lane[1]*weights[i]
-                right_slope += right_lane[0]*weights[i]
-                right_intercept += right_lane[1]*weights[i]
+                if left_lane is not None and right_lane is not None:
+                    weight_sum += weights[i]
+                    left_slope += left_lane[0]*weights[i]
+                    left_intercept += left_lane[1]*weights[i]
+                    right_slope += right_lane[0]*weights[i]
+                    right_intercept += right_lane[1]*weights[i]
 
             left_lane_average = [left_slope/weight_sum,left_intercept/weight_sum]
             right_lane_average = [right_slope/weight_sum,right_intercept/weight_sum]
@@ -445,37 +451,49 @@ We can now apply our lane finding pipeline to our test videos.
 ```python
 # no lane smoothing
 process_video('solidWhiteRight.mp4','solidWhiteRight-output-mask-gray-blur-canny-roi-hough.mp4',lane_smoothing=False)
-# no lane smoothing
-process_video('solidYellowLeft.mp4', 'solidYellowLeft-output-mask-gray-blur-canny-roi-hough.mp4',lane_smoothing=False)
-# no lane smoothing
-process_video('challenge.mp4', 'challenge-output-mask-gray-blur-canny-roi-hough.mp4',lane_smoothing=False)
 ```
 
     [MoviePy] >>>> Building video test_videos/solidWhiteRight-output-mask-gray-blur-canny-roi-hough.mp4
     [MoviePy] Writing video test_videos/solidWhiteRight-output-mask-gray-blur-canny-roi-hough.mp4
 
 
-    100%|█████████▉| 221/222 [00:10<00:00, 20.25it/s]
+    100%|█████████▉| 221/222 [00:05<00:00, 37.88it/s]
 
 
     [MoviePy] Done.
     [MoviePy] >>>> Video ready: test_videos/solidWhiteRight-output-mask-gray-blur-canny-roi-hough.mp4 
     
+
+
+
+```python
+# no lane smoothing
+process_video('solidYellowLeft.mp4', 'solidYellowLeft-output-mask-gray-blur-canny-roi-hough.mp4',lane_smoothing=False)
+```
+
     [MoviePy] >>>> Building video test_videos/solidYellowLeft-output-mask-gray-blur-canny-roi-hough.mp4
     [MoviePy] Writing video test_videos/solidYellowLeft-output-mask-gray-blur-canny-roi-hough.mp4
 
 
-    100%|█████████▉| 681/682 [00:34<00:00, 17.53it/s]
+    100%|█████████▉| 681/682 [00:21<00:00, 32.09it/s]
 
 
     [MoviePy] Done.
     [MoviePy] >>>> Video ready: test_videos/solidYellowLeft-output-mask-gray-blur-canny-roi-hough.mp4 
     
+
+
+
+```python
+# no lane smoothing
+process_video('challenge.mp4', 'challenge-output-mask-gray-blur-canny-roi-hough.mp4',lane_smoothing=False)
+```
+
     [MoviePy] >>>> Building video test_videos/challenge-output-mask-gray-blur-canny-roi-hough.mp4
     [MoviePy] Writing video test_videos/challenge-output-mask-gray-blur-canny-roi-hough.mp4
 
 
-    100%|██████████| 251/251 [00:19<00:00, 16.10it/s]
+    100%|██████████| 251/251 [00:15<00:00, 16.25it/s]
 
 
     [MoviePy] Done.
@@ -490,37 +508,49 @@ Let's remove some of the noise in the markings by implementing our lane smoothin
 ```python
 # with lane smoothing
 process_video('solidWhiteRight.mp4','solidWhiteRight-output-mask-gray-blur-canny-roi-hough-smoothing.mp4',lane_smoothing=True)
-# with lane smoothing
-process_video('solidYellowLeft.mp4', 'solidYellowLeft-output-mask-gray-blur-canny-roi-hough-smoothing.mp4',lane_smoothing=True)
-# with lane smoothing
-process_video('challenge.mp4', 'challenge-output-mask-gray-blur-canny-roi-hough-smoothing.mp4',lane_smoothing=True)
 ```
 
     [MoviePy] >>>> Building video test_videos/solidWhiteRight-output-mask-gray-blur-canny-roi-hough-smoothing.mp4
     [MoviePy] Writing video test_videos/solidWhiteRight-output-mask-gray-blur-canny-roi-hough-smoothing.mp4
 
 
-    100%|█████████▉| 221/222 [00:08<00:00, 25.20it/s]
+    100%|█████████▉| 221/222 [00:06<00:00, 34.85it/s]
 
 
     [MoviePy] Done.
     [MoviePy] >>>> Video ready: test_videos/solidWhiteRight-output-mask-gray-blur-canny-roi-hough-smoothing.mp4 
     
+
+
+
+```python
+# with lane smoothing
+process_video('solidYellowLeft.mp4', 'solidYellowLeft-output-mask-gray-blur-canny-roi-hough-smoothing.mp4',lane_smoothing=True)
+```
+
     [MoviePy] >>>> Building video test_videos/solidYellowLeft-output-mask-gray-blur-canny-roi-hough-smoothing.mp4
     [MoviePy] Writing video test_videos/solidYellowLeft-output-mask-gray-blur-canny-roi-hough-smoothing.mp4
 
 
-    100%|█████████▉| 681/682 [00:28<00:00, 27.12it/s]
+    100%|█████████▉| 681/682 [00:21<00:00, 32.39it/s]
 
 
     [MoviePy] Done.
     [MoviePy] >>>> Video ready: test_videos/solidYellowLeft-output-mask-gray-blur-canny-roi-hough-smoothing.mp4 
     
+
+
+
+```python
+# with lane smoothing
+process_video('challenge.mp4', 'challenge-output-mask-gray-blur-canny-roi-hough-smoothing.mp4',lane_smoothing=True)
+```
+
     [MoviePy] >>>> Building video test_videos/challenge-output-mask-gray-blur-canny-roi-hough-smoothing.mp4
     [MoviePy] Writing video test_videos/challenge-output-mask-gray-blur-canny-roi-hough-smoothing.mp4
 
 
-    100%|██████████| 251/251 [00:21<00:00, 11.82it/s]
+    100%|██████████| 251/251 [00:14<00:00, 17.53it/s]
 
 
     [MoviePy] Done.
