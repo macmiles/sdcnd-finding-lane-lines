@@ -30,11 +30,11 @@ Lets define our function to display loaded images.
 
 
 ```python
-def show_images(images,cmap=None):
-    cols=2
+def display_images(images,cmap=None):
+    cols=3
     rows=(len(images)+1)//cols # the "//" returns a whole number
     
-    plt.figure(figsize=(10,11))
+    plt.figure(figsize=(15,5))
     for i, image in enumerate(images):
         plt.subplot(rows,cols,i+1)
         # use grayscale if the image only has one channel
@@ -52,11 +52,11 @@ Load and display images.
 ```python
 test_images = [plt.imread(path) for path in glob.glob('test_images/*.jpg')]
 
-show_images(test_images)
+display_images(test_images)
 ```
 
 
-![png](readme_images/output_6_0.png)
+![png](images/output_6_0.png)
 
 
 ## Lane Marking Color Selection
@@ -71,15 +71,15 @@ The images are currently set to the RGB color space, which may have its downfall
 
 
 ```python
-# selects yellow and white lane marking for an RGB image
-def select_rgb_white_yellow(image):
+# selects white and yellow lane marking for an RGB image
+def select_rgb_wy(image):
     # white color mask
     lower = np.uint8([200,200,200])
     upper = np.uint8([255,255,255])
     white_mask = cv2.inRange(image, lower, upper) # inRange() function returns RGB rows that are within upper/lower thresholds of an array
     
     # yellow color mask
-    lower = np.uint8([190,190,0])
+    lower = np.uint8([175,185,0])
     upper = np.uint8([255,255,255])
     yellow_mask = cv2.inRange(image, lower, upper)
     
@@ -91,11 +91,11 @@ def select_rgb_white_yellow(image):
     
     return imposed
 
-show_images(list(map(select_rgb_white_yellow,test_images)))
+display_images(list(map(select_rgb_wy,test_images)))
 ```
 
 
-![png](readme_images/output_8_0.png)
+![png](images/output_8_0.png)
 
 
 Our results aren't bad but let's also try converting our RGB to a slightly different color space.
@@ -112,11 +112,11 @@ Using the `cvtColor` function and the `COLOR_RGB2HSL` method from cv2, we're abl
 def rgb_to_hsl(image):
     return cv2.cvtColor(image,cv2.COLOR_RGB2HLS)
 
-show_images(list(map(rgb_to_hsl,test_images)))
+display_images(list(map(rgb_to_hsl,test_images)))
 ```
 
 
-![png](readme_images/output_12_0.png)
+![png](images/output_12_0.png)
 
 
 ### Lane Color Selection
@@ -133,7 +133,7 @@ def select_lane_lines(image):
     white_mask = cv2.inRange(hsl_image,lower,upper)
     
     # yellow color mask
-    lower = np.uint8([10,0,100])
+    lower = np.uint8([15,10,110])
     upper = np.uint8([40,255,255])
     yellow_mask = cv2.inRange(hsl_image,lower,upper)
     
@@ -145,12 +145,12 @@ def select_lane_lines(image):
     
     return imposed
 
-white_yellow_lane_lines = list(map(select_lane_lines,test_images))
-show_images(white_yellow_lane_lines)
+wy_lane_lines = list(map(select_lane_lines,test_images))
+display_images(wy_lane_lines)
 ```
 
 
-![png](readme_images/output_14_0.png)
+![png](images/output_14_0.png)
 
 
 ### Grayscale Lane Color Conversion
@@ -161,12 +161,12 @@ We can now convert our white and yellow lane markings to a grayscale color space
 def rgb_to_gray(image):
     return cv2.cvtColor(image,cv2.COLOR_RGB2GRAY)
 
-gray_lane_lines = list(map(rgb_to_gray,white_yellow_lane_lines))
-show_images(gray_lane_lines)
+gray_lane_lines = list(map(rgb_to_gray,wy_lane_lines))
+display_images(gray_lane_lines)
 ```
 
 
-![png](readme_images/output_16_0.png)
+![png](images/output_16_0.png)
 
 
 ## Edge Detection
@@ -182,11 +182,11 @@ def gaussian_blur(image, kernel_size=17):
     return cv2.GaussianBlur(image,(kernel_size,kernel_size),0)
 
 blur_lanes = list(map(gaussian_blur,gray_lane_lines))
-show_images(blur_lanes)
+display_images(blur_lanes)
 ```
 
 
-![png](readme_images/output_18_0.png)
+![png](images/output_18_0.png)
 
 
 ### Canny Edge Detection
@@ -211,11 +211,11 @@ def canny_edge_detection(image,low_threshold=10,high_threshold=150):
     return cv2.Canny(image,low_threshold,high_threshold)
 
 lane_edges = list(map(canny_edge_detection, blur_lanes))
-show_images(lane_edges)
+display_images(lane_edges)
 ```
 
 
-![png](readme_images/output_20_0.png)
+![png](images/output_20_0.png)
 
 
 ## Region of Interest (ROI) Selection
@@ -226,7 +226,7 @@ We'll be utilizing the `cv2.fillPoly()` function to mask a specified region of a
 
 
 ```python
-def filter_region(image,vertices):
+def apply_poly(image,vertices):
     mask = np.zeros_like(image)
     if len(mask.shape)==2:
         cv2.fillPoly(mask,vertices,255) # applies fillPoly on the mask object using the vertices provided
@@ -234,7 +234,7 @@ def filter_region(image,vertices):
         cv2.fillPoly(mask,vertices,(255,)*mask.shape[2])
     return cv2.bitwise_and(image,mask)
 
-def select_region(image,bottom_x_adj=0.1,top_x_adj=0.4,top_y=0.6):
+def select_roi(image,bottom_x_adj=0.1,top_x_adj=0.4,top_y=0.6):
     ysize, xsize = image.shape[:2]
     bottom_left = [xsize*bottom_x_adj,ysize]
     bottom_right = [xsize*(1-bottom_x_adj),ysize]
@@ -242,14 +242,14 @@ def select_region(image,bottom_x_adj=0.1,top_x_adj=0.4,top_y=0.6):
     top_right = [xsize*(1-top_x_adj),ysize*top_y]
     
     vertices = np.array([[bottom_left, top_left, top_right, bottom_right]],dtype=np.int32)
-    return filter_region(image,vertices)
+    return apply_poly(image,vertices)
 
-select_roi = list(map(select_region,lane_edges))
-show_images(select_roi)
+select_roi_list = list(map(select_roi,lane_edges))
+display_images(select_roi_list)
 ```
 
 
-![png](readme_images/output_22_0.png)
+![png](images/output_22_0.png)
 
 
 ## Hough Transform for Line Detection
@@ -264,7 +264,7 @@ We're able to apply this technique using the `cv2.HoughLinesP` function and the 
 
 A line in parameteric form can be illustrated as rho=xcos(theta)+ysin(theta)
 
-<img src="houghlines.png" width=200px/>
+<img src="images/houghlines.png" width=200px/>
 
 Let's define our Hough Transform function and display the results onto our `test_images`.
 
@@ -273,7 +273,7 @@ Let's define our Hough Transform function and display the results onto our `test
 def hough_transform(image):
     return cv2.HoughLinesP(image,rho=1,theta=np.pi/180,threshold=20,minLineLength=20,maxLineGap=300)
 
-hough_lines_list = list(map(hough_transform,select_roi))
+hough_lines_list = list(map(hough_transform,select_roi_list))
 ```
 
 `hough_lines` contains all the lines that were detected in each given image. 
@@ -282,20 +282,20 @@ Let's impose those lines onto the original images.
 
 
 ```python
-def draw_lines(image,lines,color=[255,0,0],thickness=2,make_copy=True):
-    if make_copy:
+def draw_lane_lines(image,lines,color=[255,0,0],thickness=2,copy_image=True):
+    if copy_image:
         image = np.copy(image)
     for line in lines:
         for x1,y1,x2,y2 in line:
             cv2.line(image,(x1,y1),(x2,y2),color,thickness)
     return image
 
-draw_lines_images = list(map(draw_lines,test_images,hough_lines_list))
-show_images(draw_lines_images)
+draw_lines = list(map(draw_lane_lines,test_images,hough_lines_list))
+display_images(draw_lines)
 ```
 
 
-![png](readme_images/output_26_0.png)
+![png](images/output_26_0.png)
 
 
 ### Extrapolating Lines
@@ -338,7 +338,7 @@ Now that we know what our slope and intercept for our two lane lines, let's crea
 
 
 ```python
-def draw_lane_lines(image,lane_lines,color=[255,0,0],thickness=12):
+def draw_two_lanes(image,lane_lines,color=[255,0,0],thickness=12):
     y1=image.shape[0]
     y2=y1*0.6
     
@@ -354,12 +354,12 @@ def draw_lane_lines(image,lane_lines,color=[255,0,0],thickness=12):
         
     return cv2.addWeighted(image,1,lane_image,0.9,0)
 
-lane_line_images = list(map(draw_lane_lines,test_images,avg_slope_int_lane_lines))
-show_images(lane_line_images)
+lane_line_images = list(map(draw_two_lanes,test_images,avg_slope_int_lane_lines))
+display_images(lane_line_images)
 ```
 
 
-![png](readme_images/output_30_0.png)
+![png](images/output_30_0.png)
 
 
 ## Identifying Lanes in Video
@@ -372,7 +372,7 @@ from collections import deque
 QUEUE_LENGTH=50
 FRAME_LENGTH=30 # number of most recent frames we'd like to evaluate
 
-class LaneDetector:
+class FindLanes:
     def __init__(self):
         self.left_lanes = deque(maxlen=QUEUE_LENGTH)
         self.right_lanes = deque(maxlen=QUEUE_LENGTH)
@@ -384,8 +384,8 @@ class LaneDetector:
         gray_lanes = rgb_to_gray(mask_lanes)
         blur_lanes = gaussian_blur(gray_lanes)
         canny_lanes = canny_edge_detection(blur_lanes)
-        select_roi = select_region(canny_lanes)
-        hough_lines = hough_transform(select_roi)
+        roi = select_roi(canny_lanes)
+        hough_lines = hough_transform(roi)
         avg_slope_int_lane_lines = avg_slope_intercept(hough_lines)
         
         # calculates a rolling time weighted lane lines
@@ -417,9 +417,9 @@ class LaneDetector:
             right_lane_average = [right_slope/weight_sum,right_intercept/weight_sum]
             #print(left_lane_average,right_lane_average)
 
-            draw_lanes = draw_lane_lines(image,[left_lane_average,right_lane_average])
+            draw_lanes = draw_two_lanes(image,[left_lane_average,right_lane_average])
         else:
-            draw_lanes = draw_lane_lines(image,avg_slope_int_lane_lines)
+            draw_lanes = draw_two_lanes(image,avg_slope_int_lane_lines)
         
         # NOTE: Since gray_lanes, blur_lanes, lane_edges, etc. don't have 3 channels (RGB) we need to convert it to an RGB using cv2.COLOR_GRAY2RGB before returning
         return draw_lanes
@@ -430,12 +430,12 @@ Let's create a function that will run our LaneDetector pipeline class.
 
 ```python
 def process_video(video_input,video_output,lane_smoothing=False):
-    detector = LaneDetector()
+    lane_finder = FindLanes()
     if lane_smoothing:
-        detector.lane_smoothing = True
+        lane_finder.lane_smoothing = True
     
     clip = VideoFileClip(os.path.join('test_videos',video_input))
-    processed = clip.fl_image(detector.process)
+    processed = clip.fl_image(lane_finder.process)
     processed.write_videofile(os.path.join('test_videos',video_output),audio=False)
 ```
 
@@ -455,11 +455,31 @@ process_video('challenge.mp4', 'challenge-output-mask-gray-blur-canny-roi-hough.
     [MoviePy] Writing video test_videos/solidWhiteRight-output-mask-gray-blur-canny-roi-hough.mp4
 
 
-    100%|█████████▉| 221/222 [00:08<00:00, 29.01it/s]
+    100%|█████████▉| 221/222 [00:10<00:00, 20.25it/s]
 
 
     [MoviePy] Done.
     [MoviePy] >>>> Video ready: test_videos/solidWhiteRight-output-mask-gray-blur-canny-roi-hough.mp4 
+    
+    [MoviePy] >>>> Building video test_videos/solidYellowLeft-output-mask-gray-blur-canny-roi-hough.mp4
+    [MoviePy] Writing video test_videos/solidYellowLeft-output-mask-gray-blur-canny-roi-hough.mp4
+
+
+    100%|█████████▉| 681/682 [00:34<00:00, 17.53it/s]
+
+
+    [MoviePy] Done.
+    [MoviePy] >>>> Video ready: test_videos/solidYellowLeft-output-mask-gray-blur-canny-roi-hough.mp4 
+    
+    [MoviePy] >>>> Building video test_videos/challenge-output-mask-gray-blur-canny-roi-hough.mp4
+    [MoviePy] Writing video test_videos/challenge-output-mask-gray-blur-canny-roi-hough.mp4
+
+
+    100%|██████████| 251/251 [00:19<00:00, 16.10it/s]
+
+
+    [MoviePy] Done.
+    [MoviePy] >>>> Video ready: test_videos/challenge-output-mask-gray-blur-canny-roi-hough.mp4 
     
 
 
@@ -480,7 +500,7 @@ process_video('challenge.mp4', 'challenge-output-mask-gray-blur-canny-roi-hough-
     [MoviePy] Writing video test_videos/solidWhiteRight-output-mask-gray-blur-canny-roi-hough-smoothing.mp4
 
 
-    100%|█████████▉| 221/222 [00:09<00:00, 23.90it/s]
+    100%|█████████▉| 221/222 [00:08<00:00, 25.20it/s]
 
 
     [MoviePy] Done.
@@ -490,7 +510,7 @@ process_video('challenge.mp4', 'challenge-output-mask-gray-blur-canny-roi-hough-
     [MoviePy] Writing video test_videos/solidYellowLeft-output-mask-gray-blur-canny-roi-hough-smoothing.mp4
 
 
-    100%|█████████▉| 681/682 [00:30<00:00, 28.29it/s]
+    100%|█████████▉| 681/682 [00:28<00:00, 27.12it/s]
 
 
     [MoviePy] Done.
@@ -500,7 +520,7 @@ process_video('challenge.mp4', 'challenge-output-mask-gray-blur-canny-roi-hough-
     [MoviePy] Writing video test_videos/challenge-output-mask-gray-blur-canny-roi-hough-smoothing.mp4
 
 
-    100%|██████████| 251/251 [00:19<00:00, 12.52it/s]
+    100%|██████████| 251/251 [00:21<00:00, 11.82it/s]
 
 
     [MoviePy] Done.
@@ -510,33 +530,11 @@ process_video('challenge.mp4', 'challenge-output-mask-gray-blur-canny-roi-hough-
 
 As we can see, the lane smoothing algorithm (right side of video) provides substantial improvements to our lane markings.
 
-
-```python
-from IPython.display import HTML
-HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/sSY5vPHzfzQ" frameborder="0" allowfullscreen></iframe>')
-```
-
-
-
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/sSY5vPHzfzQ" frameborder="0" allowfullscreen></iframe>
-
-
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=sSY5vPHzfzQ" target="_blank"><img src="http://img.youtube.com/vi/sSY5vPHzfzQ/0.jpg" alt="IMAGE ALT TEXT HERE" width="400" height="300" border="10" /></a>
 
 ## Conclusion
-We've successfully developed a pipeline that is consistently able to identify lane markings on various road and environment conditions but there's still some room for improvement. It might be pertinent to apply a different line fitting technique when traversing curved roads, since fitting a linear line on a curve isn't exactly ideal. Moreover, we could explore the idea of identifying lane markings in adjacent lanes to get a better world view of the entire road/freeway. At the moment, our pipeline has only been tested on a handful of test samples. If we want to create a more robust pipeline, we should consider testing it on other roads and different weather conditions as well. 
+We've successfully developed a pipeline that is able to consistently identify lane markings on various roads and environment conditions but there's still some room for improvement. It might be pertinent to apply a different line fitting technique when traversing curved roads, since fitting a linear line on a curve isn't ideal. Moreover, we could explore the idea of identifying lane markings in adjacent lanes to get a better world view of the entire road/freeway. At the moment, our pipeline has only been tried and tested on a handful of roads. If we want to create a more robust pipeline, we should consider testing it on other roads and different weather conditions as well. 
 
 All in all, this was a challening but fun project with a lot of lessons learned. The task of identifying lane markings isn't always an easy one, but through the use of some creative computing and basic algebra, we were able to do just that.
 
-
-```python
-from IPython.display import HTML
-HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/mVGHTRD9wAY" frameborder="0" allowfullscreen></iframe>')
-```
-
-
-
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/mVGHTRD9wAY" frameborder="0" allowfullscreen></iframe>
-
-
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=mVGHTRD9wAY" target="_blank"><img src="http://img.youtube.com/vi/mVGHTRD9wAY/0.jpg" alt="IMAGE ALT TEXT HERE" width="400" height="300" border="10" /></a>
