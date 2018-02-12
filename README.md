@@ -192,7 +192,7 @@ display_images(blur_lanes)
 ### Canny Edge Detection
 We can apply our canny edge detection algorithm using cv2's `Canny` function with the appropriate parameters.
 
-Wikipedia explains the conecpt of edge detection as follows:
+Wikipedia explains the concept of edge detection as follows:
 >Edge detection includes a variety of mathematical methods that aim at identifying points in a digital image at which the image brightness changes sharply or, more formally, has discontinuities.
 
 >https://en.wikipedia.org/wiki/Edge_detection
